@@ -52,6 +52,7 @@ func main() {
 	proxy := socketproxy.New(*upstream, &dockerguard.RulesDirector{
 		Client:        &proxyHTTPClient,
 		RoutesAllowed: &routesAllowed,
+		Debug:         debug,
 	})
 
 	listener, err := net.Listen("tcp", ":"+strconv.Itoa(*port))

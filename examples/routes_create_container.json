@@ -1,0 +1,24 @@
+{
+  "routes_allowed": [
+    {
+      "method": "GET",
+      "pattern": "^/containers/json$"
+    },
+    {
+      "method": "POST",
+      "pattern": "^/containers/create$"
+    },
+    {
+      "method": "POST",
+      "pattern": "^/containers/([a-f0-9]{1,64})/(attach|wait|start|resize)$"
+    },
+    {
+      "method": "*",
+      "pattern": "^/containers/(.*molecule.*)/(json|start|stop|exec)$"
+    },
+    {
+      "method": "*",
+      "pattern": "^/exec/([a-f0-9]{1,64})/(start|json|resize)$"
+    }
+  ]
+}

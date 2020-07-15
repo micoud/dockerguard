@@ -1,7 +1,10 @@
 package dockerguard
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"regexp"
 
@@ -18,6 +21,7 @@ var (
 type RulesDirector struct {
 	Client        *http.Client
 	RoutesAllowed *config.RoutesAllowed
+	Debug         bool
 }
 
 func writeError(w http.ResponseWriter, msg string, code int) {
@@ -59,93 +63,50 @@ func (r *RulesDirector) Direct(l socketproxy.Logger, req *http.Request, upstream
 		return upstream
 	}
 
+	// match routes defined in json files
 	for _, route := range r.RoutesAllowed.Routes {
 		if match(route.Method, route.Pattern) {
+			if route.Method == "POST" && req.Header.Get("Content-Type") == "application/json" {
+				return r.handleJSON(l, req, upstream)
+			}
 			return upstream
 		}
 	}
-	// case match(`GET`, `^/events$`):
-	// 	return r.addLabelsToQueryStringFilters(l, req, upstream)
-	// // Container related endpoints
-	// case match(`POST`, `^/containers/create$`):
-	// 	return r.handleContainerCreate(l, req, upstream)
-	// case match(`POST`, `^/containers/prune$`):
-	// 	return r.addLabelsToQueryStringFilters(l, req, upstream)
-	// case match(`GET`, `^/containers/json$`):
-	// 	return r.addLabelsToQueryStringFilters(l, req, upstream)
-	// case match(`*`, `^/(containers|exec)/(\w+)\b`):
-	// 	if ok, err := r.checkOwner(l, "containers", false, req); ok {
-	// 		return upstream
-	// 	} else if err == errInspectNotFound {
-	// 		l.Printf("Container not found, allowing")
-	// 		return upstream
-	// 	} else if err != nil {
-	// 		return errorHandler(err.Error(), http.StatusInternalServerError)
-	// 	}
-	// 	return errorHandler("Unauthorized access to container", http.StatusUnauthorized)
-
-	// // Build related endpoints
-	// case match(`POST`, `^/build$`):
-	// 	return r.handleBuild(l, req, upstream)
-
-	// // Image related endpoints
-	// case match(`GET`, `^/images/json$`):
-	// 	return r.addLabelsToQueryStringFilters(l, req, upstream)
-	// case match(`POST`, `^/images/create$`):
-	// 	return upstream
-	// case match(`POST`, `^/images/(create|search|get|load)$`):
-	// 	break
-	// case match(`POST`, `^/images/prune$`):
-	// 	return r.addLabelsToQueryStringFilters(l, req, upstream)
-	// case match(`*`, `^/images/(\w+)\b`):
-	// 	if ok, err := r.checkOwner(l, "images", true, req); ok {
-	// 		return upstream
-	// 	} else if err == errInspectNotFound {
-	// 		l.Printf("Image not found, allowing")
-	// 		return upstream
-	// 	} else if err != nil {
-	// 		return errorHandler(err.Error(), http.StatusInternalServerError)
-	// 	}
-	// 	return errorHandler("Unauthorized access to image", http.StatusUnauthorized)
-
-	// // Network related endpoints
-	// case match(`GET`, `^/networks$`):
-	// 	return r.addLabelsToQueryStringFilters(l, req, upstream)
-	// case match(`POST`, `^/networks/create$`):
-	// 	return r.handleNetworkCreate(l, req, upstream)
-	// case match(`POST`, `^/networks/prune$`):
-	// 	return r.addLabelsToQueryStringFilters(l, req, upstream)
-	// case match(`DELETE`, `^/networks/(.+)$`):
-	// 	return r.handleNetworkDelete(l, req, upstream)
-	// case match(`GET`, `^/networks/(.+)$`),
-	// 	match(`POST`, `^/networks/(.+)/(connect|disconnect)$`):
-	// 	if ok, err := r.checkOwner(l, "networks", true, req); ok {
-	// 		return upstream
-	// 	} else if err == errInspectNotFound {
-	// 		l.Printf("Network not found, allowing")
-	// 		return upstream
-	// 	} else if err != nil {
-	// 		return errorHandler(err.Error(), http.StatusInternalServerError)
-	// 	}
-	// 	return errorHandler("Unauthorized access to network", http.StatusUnauthorized)
-
-	// // Volumes related endpoints
-	// case match(`GET`, `^/volumes$`):
-	// 	return r.addLabelsToQueryStringFilters(l, req, upstream)
-	// case match(`POST`, `^/volumes/create$`):
-	// 	return r.addLabelsToBody(l, req, upstream)
-	// case match(`POST`, `^/volumes/prune$`):
-	// 	return r.addLabelsToQueryStringFilters(l, req, upstream)
-	// case match(`GET`, `^/volumes/([-\w]+)$`), match(`DELETE`, `^/volumes/(-\w+)$`):
-	// 	if ok, err := r.checkOwner(l, "volumes", true, req); ok {
-	// 		return upstream
-	// 	} else if err == errInspectNotFound {
-	// 		l.Printf("Volume not found, allowing")
-	// 		return upstream
-	// 	} else if err != nil {
-	// 		return errorHandler(err.Error(), http.StatusInternalServerError)
-	// 	}
-	// 	return errorHandler("Unauthorized access to volume", http.StatusUnauthorized)
 
 	return errorHandler(req.Method+" "+req.URL.Path+" Endpoint not allowed", http.StatusForbidden)
+}
+
+func (r *RulesDirector) handleJSON(l socketproxy.Logger, req *http.Request, upstream http.Handler) http.Handler {
+	if r.Debug {
+		fmt.Println("Called handleJSON()")
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		var decoded map[string]interface{}
+		if err := json.NewDecoder(req.Body).Decode(&decoded); err != nil {
+			writeError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if r.Debug {
+			fmt.Printf("%s \n", prettyPrint(decoded))
+		}
+
+		encoded, err := json.Marshal(decoded)
+		if err != nil {
+			writeError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		// reset it so that upstream can read it again
+		req.ContentLength = int64(len(encoded))
+		req.Body = ioutil.NopCloser(bytes.NewReader(encoded))
+
+		upstream.ServeHTTP(w, req)
+	})
+}
+
+// aux function to pretty print json
+func prettyPrint(i interface{}) string {
+	s, _ := json.MarshalIndent(i, "", "\t")
+	return string(s)
 }

@@ -7,6 +7,10 @@
     {
       "method": "*",
       "pattern": "^/containers/(.*mariadb.*)/(json|start|stop)$"
+    },
+    {
+      "method": "GET",
+      "pattern": "^/containers/([a-f0-9]{1,64})/(top|logs)$"
     }
   ]
 }

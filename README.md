@@ -56,6 +56,8 @@ If no config-file is specified `routes.json` is used, that just enables a listin
 Find example route definitions in `./examples`.
 
 
+Note: to learn about Docker API endpoints, consult the [documentation](https://docs.docker.com/engine/api/v1.40/).
+
 ## TODOs
 
 * [ ] dockerize
