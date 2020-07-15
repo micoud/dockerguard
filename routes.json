@@ -1,0 +1,8 @@
+{
+  "routes_allowed": [
+    {
+      "method": "GET",
+      "pattern": "^/containers/json$"
+    }
+  ]
+}

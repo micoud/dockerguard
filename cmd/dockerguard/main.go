@@ -13,6 +13,7 @@ import (
 	"syscall"
 
 	"github.com/micoud/dockerguard"
+	"github.com/micoud/dockerguard/config"
 	"github.com/micoud/dockerguard/socketproxy"
 )
 
@@ -23,12 +24,19 @@ var (
 func main() {
 	// read cmdline flags
 	flag.BoolVar(&debug, "debug", false, "Show debugging logging for the socket")
+	configfile := flag.String("config", "routes.json", "json-file to read routes config from")
 	upstream := flag.String("upstream", "/var/run/docker.sock", "The path to docker socket")
 	port := flag.Int("port", 2375, "port to listen on")
 	flag.Parse()
 
 	if debug {
 		socketproxy.Debug = true
+	}
+
+	// read the routes config from file
+	routesAllowed := config.RoutesConfig(*configfile)
+	for _, r := range routesAllowed.Routes {
+		fmt.Printf("Routes allowed: method %s, pattern %s\n", r.Method, r.Pattern)
 	}
 
 	// dial upstreamproxy
@@ -42,7 +50,8 @@ func main() {
 	}
 
 	proxy := socketproxy.New(*upstream, &dockerguard.RulesDirector{
-		Client: &proxyHTTPClient,
+		Client:        &proxyHTTPClient,
+		RoutesAllowed: &routesAllowed,
 	})
 
 	listener, err := net.Listen("tcp", ":"+strconv.Itoa(*port))

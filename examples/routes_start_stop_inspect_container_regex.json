@@ -1,0 +1,12 @@
+{
+  "routes_allowed": [
+    {
+      "method": "GET",
+      "pattern": "^/containers/json$"
+    },
+    {
+      "method": "*",
+      "pattern": "^/containers/(.*mariadb.*)/(json|start|stop)$"
+    }
+  ]
+}

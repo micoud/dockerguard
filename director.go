@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"regexp"
 
+	"github.com/micoud/dockerguard/config"
 	"github.com/micoud/dockerguard/socketproxy"
 )
 
@@ -12,10 +13,11 @@ var (
 	versionRegex = regexp.MustCompile(`^/v\d\.\d+\b`)
 )
 
-// RulesDirector ... struct that contains a http client and may contain additional fields needed
+// RulesDirector ... struct that contains a http client additional fields needed
 // for handling / manipulating requests
 type RulesDirector struct {
-	Client *http.Client
+	Client        *http.Client
+	RoutesAllowed *config.RoutesAllowed
 }
 
 func writeError(w http.ResponseWriter, msg string, code int) {
@@ -55,6 +57,12 @@ func (r *RulesDirector) Direct(l socketproxy.Logger, req *http.Request, upstream
 		return upstream
 	case match(`HEAD`, `^/_ping$`):
 		return upstream
+	}
+
+	for _, route := range r.RoutesAllowed.Routes {
+		if match(route.Method, route.Pattern) {
+			return upstream
+		}
 	}
 	// case match(`GET`, `^/events$`):
 	// 	return r.addLabelsToQueryStringFilters(l, req, upstream)
