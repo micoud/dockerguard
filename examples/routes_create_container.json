@@ -6,7 +6,11 @@
     },
     {
       "method": "POST",
-      "pattern": "^/containers/create$"
+      "pattern": "^/containers/create$",
+      "check_json": [{
+        "key": "HostConfig.Binds",
+        "allowed_values": ["^/tmp/(\/w)"]
+      }]
     },
     {
       "method": "POST",

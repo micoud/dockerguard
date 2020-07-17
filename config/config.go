@@ -12,8 +12,17 @@ type RoutesAllowed struct {
 }
 
 type route struct {
-	Method  string `json:"method"`
-	Pattern string `json:"pattern"`
+	Method    string      `json:"method"`
+	Pattern   string      `json:"pattern"`
+	CheckJSON []CheckJSON `json:"check_json"`
+}
+
+type allowedType interface{}
+
+// CheckJSON ... struct with keys and allowed values to check for in posted JSONs
+type CheckJSON struct {
+	Key           string        `json:"key"`
+	AllowedValues []allowedType `json:"allowed_values"`
 }
 
 // RoutesConfig ... reads routes that should be available from json file
