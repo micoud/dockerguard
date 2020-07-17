@@ -7,10 +7,16 @@
     {
       "method": "POST",
       "pattern": "^/containers/create$",
-      "check_json": [{
-        "key": "HostConfig.Binds",
-        "allowed_values": ["^/tmp/(\/w)"]
-      }]
+      "check_json": [
+        {
+          "key": "HostConfig.Binds",
+          "allowed_values": ["^/home/klemens","^/var/run/docker.sock"]
+        },
+        {
+          "key": "Tty",
+          "allowed_values": [true]
+        }
+      ]
     },
     {
       "method": "POST",

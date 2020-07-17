@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -94,12 +95,31 @@ func (r *RulesDirector) handleJSON(l socketproxy.Logger, req *http.Request, upst
 
 		for _, c := range checkJSON {
 			keys := strings.Split(c.Key, ".")
-			fmt.Printf("%v \n", keys)
 			lastKey := keys[len(keys)-1]
 			found, val := findNested(decoded, lastKey)
 			if found {
-				fmt.Printf("key '%s' found: %v, (type %T)\n", lastKey, val, val)
+				switch vt := val.(type) {
+				// if val is an array
+				case []interface{}:
+					for _, v := range vt {
+						if !isAllowed(v, c.AllowedValues) {
+							errString := fmt.Sprintf("Found forbidden value: %v for key %s", v, c.Key)
+							fmt.Println(errString)
+							writeError(w, errString, http.StatusUnauthorized)
+							return
+						}
+					}
+				// if val is a single object
+				case interface{}:
+					if !isAllowed(val, c.AllowedValues) {
+						errString := fmt.Sprintf("Found forbidden value: %v for key %s", val, c.Key)
+						fmt.Println(errString)
+						writeError(w, errString, http.StatusUnauthorized)
+						return
+					}
+				}
 			} else {
+				// TODO: this should trigger notice, that routes*.json is not configured well
 				fmt.Printf("key '%s' not found\n", lastKey)
 			}
 		}
@@ -144,4 +164,51 @@ func findNested(m map[string]interface{}, key string) (bool, interface{}) {
 	}
 	// not found at all
 	return false, nil
+}
+
+// aux function to match allowed_values with values in json
+func isAllowed(value interface{}, allowedValues []interface{}) bool {
+	var matchString = func(v string, a string) bool {
+		fmt.Printf("Check allowed: '%s' against '%s'\n", v, a)
+		re := regexp.MustCompile(a)
+		return re.MatchString(v)
+	}
+
+	var matchFloat = func(v float64, a float64) bool {
+		fmt.Printf("Check allowed: '%f' against '%f'\n", v, a)
+		return v == a
+	}
+
+	var matchBool = func(v bool, a bool) bool {
+		fmt.Printf("Check allowed: '%t' against '%t'\n", v, a)
+		return v == a
+	}
+
+	for _, a := range allowedValues {
+		if reflect.TypeOf(value) == reflect.TypeOf(a) {
+			switch vt := value.(type) {
+			case bool:
+				if a, ok := a.(bool); ok {
+					if matchBool(vt, a) {
+						return true
+					}
+				}
+			case float64:
+				if a, ok := a.(float64); ok {
+					if matchFloat(vt, a) {
+						return true
+					}
+				}
+			case string:
+				if a, ok := a.(string); ok {
+					if matchString(vt, a) {
+						return true
+					}
+				}
+			}
+		} else {
+			return false
+		}
+	}
+	return false
 }
