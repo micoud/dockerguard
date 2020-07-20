@@ -13,16 +13,35 @@ go build -o dockerguard ./cmd/dockerguard
 ./dockerguard [-debug] [-port <port number>] [-upstream <docker-socket>]
 ```
 
-### Use as proxy for Docker daemon
-
-To use it set env. variable `export DOCKER_HOST='DOCKER_HOST=tcp://localhost:<port>'`.
-
 ### Commandline flags
 
 * `-debug`: get detailed logging of request and response bodies, should only be used for debugging, default is `false`
-* `-port`: local port number that is listened on , default is 2375
+* `-port`: local port number that is listened on , default is `2375`
 * `-upstream`: docker-socket to guard/to forward allowed requests to, default is `/var/run/docker.sock`
 * `-config`: specifies the file to read routes config from, default is `routes.json`
+
+
+## Docker container
+
+Build the container
+
+```bash
+docker build -t dockerguard:latest .
+```
+
+Note: to use it the docker-socket has to be mounted. To override the standard (dummy) routes configuration mount your desired configuration to /routes.json or mount it to another location and override the command by appending `/go/bin/dockerguard <config-params>`. Port and upstream docker-socket can be overriden, likewise.
+
+E.g. to use `examples/routes_create_container.json` and enable debugging, run
+
+```bash
+docker run -v /var/run/docker.sock:/var/run/docker.sock -v /path/to/examples/routes_create_container.json:/routes.json -p 2375:2375 dockerguard /go/bin/dockerguard -debug=true
+```
+
+
+## Use as proxy for Docker daemon
+
+To use it set env. variable `export DOCKER_HOST='DOCKER_HOST=tcp://localhost:<port>'`.
+
 
 
 ## Configuration of allowed routes
@@ -60,9 +79,10 @@ Note: to learn about Docker API endpoints, consult the [documentation](https://d
 
 ## TODOs
 
-* [ ] dockerize
+* [*] dockerize
 * [*] mechanism to check posted JSONs
 * [*] mechanism to check URL parameters
 * [ ] finish implementation of label adding
 * [ ] review which HTTP statuscodes should be used where
 * [ ] add mechanism to manipulate jsons in request bodies (e.g. for services)
+* [ ] adding tests
