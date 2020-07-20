@@ -12,18 +12,18 @@ type RoutesAllowed struct {
 }
 
 type route struct {
-	Method      string        `json:"method"`
-	Pattern     string        `json:"pattern"`
-	AppendLabel []AppendLabel `json:"append_label"`
-	CheckParam  []CheckParam  `json:"check_param"`
-	CheckJSON   []CheckJSON   `json:"check_json"`
+	Method       string         `json:"method"`
+	Pattern      string         `json:"pattern"`
+	AppendFilter []AppendFilter `json:"append_filter"`
+	CheckParam   []CheckParam   `json:"check_param"`
+	CheckJSON    []CheckJSON    `json:"check_json"`
 }
 
-// AppendLabel ... struct with API filter to check and
+// AppendFilter ... struct with API filter to check and
 // an array of allowed values
-type AppendLabel struct {
-	FilterKey     string        `json:"filter_key"`
-	AllowedValues []interface{} `json:"allowed_values"`
+type AppendFilter struct {
+	FilterKey string        `json:"filter_key"`
+	Values    []interface{} `json:"values"`
 }
 
 // CheckParam ... struct with URL params to check and

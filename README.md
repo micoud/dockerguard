@@ -86,7 +86,7 @@ Note: to learn about Docker API endpoints, consult the [documentation](https://d
 * [x] Jenkinsfile
 * [x] mechanism to check posted JSONs
 * [x] mechanism to check URL parameters
-* [ ] finish implementation of label adding
+* [x] finish implementation of filter adding
 * [ ] review which HTTP statuscodes should be used where
 * [ ] add mechanism to manipulate jsons in request bodies (e.g. for services)
 * [ ] add tests

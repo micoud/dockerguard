@@ -3,10 +3,10 @@
     {
       "method": "GET",
       "pattern": "^/containers/json$",
-      "append_label": [
+      "append_filter": [
         {
           "filter_key": "name",
-          "allowed_values": ["molecule"]
+          "values": ["mole"]
         }
       ]
     },

@@ -71,8 +71,8 @@ func (r *RulesDirector) Direct(l socketproxy.Logger, req *http.Request, upstream
 			// do request checking
 			if (route.Method == "POST" && req.Header.Get("Content-Type") == "application/json" && route.CheckJSON != nil) ||
 				(route.CheckParam != nil) ||
-				(route.AppendLabel != nil) {
-				return r.checkRequest(l, req, upstream, route.CheckJSON, route.CheckParam, route.AppendLabel)
+				(route.AppendFilter != nil) {
+				return r.checkRequest(l, req, upstream, route.CheckJSON, route.CheckParam, route.AppendFilter)
 			}
 
 			return upstream
@@ -82,7 +82,7 @@ func (r *RulesDirector) Direct(l socketproxy.Logger, req *http.Request, upstream
 	return errorHandler(req.Method+" "+req.URL.Path+" Endpoint not allowed", http.StatusForbidden)
 }
 
-func (r *RulesDirector) checkRequest(l socketproxy.Logger, req *http.Request, upstream http.Handler, checkJSON []config.CheckJSON, checkParam []config.CheckParam, appendLabel []config.AppendLabel) http.Handler {
+func (r *RulesDirector) checkRequest(l socketproxy.Logger, req *http.Request, upstream http.Handler, checkJSON []config.CheckJSON, checkParam []config.CheckParam, appendFilter []config.AppendFilter) http.Handler {
 	if r.Debug {
 		fmt.Println("Called checkRequest()")
 	}
@@ -103,55 +103,58 @@ func (r *RulesDirector) checkRequest(l socketproxy.Logger, req *http.Request, up
 			}
 		}
 
-		// // append labels to filters
-		// if appendLabel != nil {
-		// 	var filters = map[string][]interface{}{}
-		// 	// parse existing filters from querystring
-		// 	if qf := q.Get("filters"); qf != "" {
-		// 		var existing map[string]interface{}
+		// append labels to filters
+		if appendFilter != nil {
+			var filters = map[string][]interface{}{}
+			// parse existing filters from querystring
+			if qf := q.Get("filters"); qf != "" {
+				var existing map[string]interface{}
 
-		// 		if err := json.NewDecoder(strings.NewReader(qf)).Decode(&existing); err != nil {
-		// 			http.Error(w, err.Error(), http.StatusBadRequest)
-		// 			return
-		// 		}
+				if err := json.NewDecoder(strings.NewReader(qf)).Decode(&existing); err != nil {
+					http.Error(w, err.Error(), http.StatusBadRequest)
+					return
+				}
 
-		// 		// different docker implementations send us different data structures
-		// 		for k, v := range existing {
-		// 			switch tv := v.(type) {
-		// 			// sometimes we get a map of value=true
-		// 			case map[string]interface{}:
-		// 				for mk := range tv {
-		// 					filters[k] = append(filters[k], mk)
-		// 				}
-		// 			// sometimes we get a slice of values (from docker-compose)
-		// 			case []interface{}:
-		// 				filters[k] = append(filters[k], tv...)
-		// 			default:
-		// 				http.Error(w, fmt.Sprintf("Unhandled filter type of %T", v), http.StatusBadRequest)
-		// 				return
-		// 			}
-		// 		}
-		// 	}
-		// 	// add an label slice if none exists
-		// 	if _, exists := filters["label"]; !exists {
-		// 		filters["label"] = []interface{}{}
-		// 	}
+				// different docker implementations send us different data structures
+				for k, v := range existing {
+					switch tv := v.(type) {
+					// sometimes we get a map of value=true
+					case map[string]interface{}:
+						for mk := range tv {
+							filters[k] = append(filters[k], mk)
+						}
+					// sometimes we get a slice of values (from docker-compose)
+					case []interface{}:
+						filters[k] = append(filters[k], tv...)
+					default:
+						http.Error(w, fmt.Sprintf("Unhandled filter type of %T", v), http.StatusBadRequest)
+						return
+					}
+				}
+			}
+			// add fields to filter
+			for _, f := range appendFilter {
+				if _, exists := filters[f.FilterKey]; !exists {
+					filters[f.FilterKey] = []interface{}{}
+				}
 
-		// 	// add an owner label
-		// 	label := ownerKey + "=" + r.Owner
-		// 	l.Printf("Adding label %v to label filters %v", label, filters["label"])
-		// 	filters["label"] = append(filters["label"], label)
+				// add values to filter param
+				for _, v := range f.Values {
+					l.Printf("Adding '%v' to filters '%v'", v, f.FilterKey)
+					filters[f.FilterKey] = append(filters[f.FilterKey], v)
+				}
+			}
 
-		// 	// encode back into json
-		// 	encoded, err := json.Marshal(filters)
-		// 	if err != nil {
-		// 		http.Error(w, err.Error(), http.StatusBadRequest)
-		// 		return
-		// 	}
+			// encode back into json
+			encoded, err := json.Marshal(filters)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
 
-		// 	q.Set("filters", string(encoded))
-		// 	req.URL.RawQuery = q.Encode()
-		// }
+			q.Set("filters", string(encoded))
+			req.URL.RawQuery = q.Encode()
+		}
 
 		// check JSON
 		if checkJSON != nil {
