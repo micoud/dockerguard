@@ -1,0 +1,51 @@
+# dockerguard-test
+version: "3.8"
+
+networks:
+  # network to docker socket
+  proxy-docker:
+    driver: overlay
+    name: proxy-docker
+    driver_opts:
+      encrypted: 'true'
+      # since we're passing docker socket stuff over TCP, lets IPSec
+
+x-default-opts:
+  &default-opts
+  logging:
+    options:
+      max-size: "1m"
+
+services:
+  dockerguard-test:
+    <<: *default-opts
+    image: localhost/dockerguard
+    networks:
+      - proxy-docker
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /mnt/storage/docker/dockerguard/routes_create_container.json:/routes.json
+    command: "/go/bin/dockerguard -debug=true"
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=false"
+
+  dind-test:
+    <<: *default-opts
+    image: localhost/dind-test
+    networks:
+      - proxy-docker
+    command:
+      - bash
+    tty: true
+    stdin_open: true
+    environment:
+      DOCKER_HOST: "tcp://dockerguard-test:2375"
+    deploy:
+      mode: global
+      labels:
+        - "traefik.enable=false"

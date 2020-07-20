@@ -10,7 +10,7 @@ This is very much inspired by the excellent [sockguard](https://github.com/build
 
 ```bash
 go build -o dockerguard ./cmd/dockerguard
-./dockerguard [-debug] [-port <port number>] [-upstream <docker-socket>]
+./dockerguard [-debug] [-port <port number>] [-upstream <docker-socket>] [-config </path/to/routes.json>]
 ```
 
 ### Commandline flags
@@ -37,6 +37,9 @@ E.g. to use `examples/routes_create_container.json` and enable debugging, run
 docker run -v /var/run/docker.sock:/var/run/docker.sock -v /path/to/examples/routes_create_container.json:/routes.json -p 2375:2375 dockerguard /go/bin/dockerguard -debug=true
 ```
 
+### Example docker-compose-file
+
+Find an example for a docker stack to deploy to a swarm with a dockerguard container and clients with an encrypted network in `docker-compose.yml`.
 
 ## Use as proxy for Docker daemon
 
