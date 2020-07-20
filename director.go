@@ -68,9 +68,13 @@ func (r *RulesDirector) Direct(l socketproxy.Logger, req *http.Request, upstream
 	// match routes defined in json files
 	for _, route := range r.RoutesAllowed.Routes {
 		if match(route.Method, route.Pattern) {
-			if route.Method == "POST" && req.Header.Get("Content-Type") == "application/json" && route.CheckJSON != nil {
-				return r.handleJSON(l, req, upstream, route.CheckJSON)
+			// do request checking
+			if (route.Method == "POST" && req.Header.Get("Content-Type") == "application/json" && route.CheckJSON != nil) ||
+				(route.CheckParam != nil) ||
+				(route.AppendLabel != nil) {
+				return r.checkRequest(l, req, upstream, route.CheckJSON, route.CheckParam, route.AppendLabel)
 			}
+
 			return upstream
 		}
 	}
@@ -78,61 +82,131 @@ func (r *RulesDirector) Direct(l socketproxy.Logger, req *http.Request, upstream
 	return errorHandler(req.Method+" "+req.URL.Path+" Endpoint not allowed", http.StatusForbidden)
 }
 
-func (r *RulesDirector) handleJSON(l socketproxy.Logger, req *http.Request, upstream http.Handler, checkJSON []config.CheckJSON) http.Handler {
+func (r *RulesDirector) checkRequest(l socketproxy.Logger, req *http.Request, upstream http.Handler, checkJSON []config.CheckJSON, checkParam []config.CheckParam, appendLabel []config.AppendLabel) http.Handler {
 	if r.Debug {
-		fmt.Println("Called handleJSON()")
+		fmt.Println("Called checkRequest()")
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		var decoded map[string]interface{}
-		if err := json.NewDecoder(req.Body).Decode(&decoded); err != nil {
-			writeError(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		if r.Debug {
-			fmt.Printf("%s \n", prettyPrint(decoded))
-		}
-
-		for _, c := range checkJSON {
-			keys := strings.Split(c.Key, ".")
-			lastKey := keys[len(keys)-1]
-			found, val := findNested(decoded, lastKey)
-			if found {
-				switch vt := val.(type) {
-				// if val is an array
-				case []interface{}:
-					for _, v := range vt {
-						if !isAllowed(v, c.AllowedValues) {
-							errString := fmt.Sprintf("Found forbidden value: %v for key %s", v, c.Key)
-							fmt.Println(errString)
-							writeError(w, errString, http.StatusUnauthorized)
-							return
-						}
-					}
-				// if val is a single object
-				case interface{}:
-					if !isAllowed(val, c.AllowedValues) {
-						errString := fmt.Sprintf("Found forbidden value: %v for key %s", val, c.Key)
+		var q = req.URL.Query()
+		// check URL params
+		if checkParam != nil {
+			for _, c := range checkParam {
+				if qf := q.Get(c.Param); qf != "" {
+					fmt.Printf("Param found %s\n", qf)
+					if !isAllowed(qf, c.AllowedValues) {
+						errString := fmt.Sprintf("Found forbidden value: %v for param %s", qf, c.Param)
 						fmt.Println(errString)
 						writeError(w, errString, http.StatusUnauthorized)
 						return
 					}
 				}
-			} else {
-				// TODO: this should trigger notice, that routes*.json is not configured well
-				fmt.Printf("key '%s' not found\n", lastKey)
 			}
 		}
 
-		encoded, err := json.Marshal(decoded)
-		if err != nil {
-			writeError(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+		// // append labels to filters
+		// if appendLabel != nil {
+		// 	var filters = map[string][]interface{}{}
+		// 	// parse existing filters from querystring
+		// 	if qf := q.Get("filters"); qf != "" {
+		// 		var existing map[string]interface{}
 
-		// reset it so that upstream can read it again
-		req.ContentLength = int64(len(encoded))
-		req.Body = ioutil.NopCloser(bytes.NewReader(encoded))
+		// 		if err := json.NewDecoder(strings.NewReader(qf)).Decode(&existing); err != nil {
+		// 			http.Error(w, err.Error(), http.StatusBadRequest)
+		// 			return
+		// 		}
+
+		// 		// different docker implementations send us different data structures
+		// 		for k, v := range existing {
+		// 			switch tv := v.(type) {
+		// 			// sometimes we get a map of value=true
+		// 			case map[string]interface{}:
+		// 				for mk := range tv {
+		// 					filters[k] = append(filters[k], mk)
+		// 				}
+		// 			// sometimes we get a slice of values (from docker-compose)
+		// 			case []interface{}:
+		// 				filters[k] = append(filters[k], tv...)
+		// 			default:
+		// 				http.Error(w, fmt.Sprintf("Unhandled filter type of %T", v), http.StatusBadRequest)
+		// 				return
+		// 			}
+		// 		}
+		// 	}
+		// 	// add an label slice if none exists
+		// 	if _, exists := filters["label"]; !exists {
+		// 		filters["label"] = []interface{}{}
+		// 	}
+
+		// 	// add an owner label
+		// 	label := ownerKey + "=" + r.Owner
+		// 	l.Printf("Adding label %v to label filters %v", label, filters["label"])
+		// 	filters["label"] = append(filters["label"], label)
+
+		// 	// encode back into json
+		// 	encoded, err := json.Marshal(filters)
+		// 	if err != nil {
+		// 		http.Error(w, err.Error(), http.StatusBadRequest)
+		// 		return
+		// 	}
+
+		// 	q.Set("filters", string(encoded))
+		// 	req.URL.RawQuery = q.Encode()
+		// }
+
+		// check JSON
+		if checkJSON != nil {
+			fmt.Println("checkRequest() - JSON checking")
+			var decoded map[string]interface{}
+			if err := json.NewDecoder(req.Body).Decode(&decoded); err != nil {
+				writeError(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			if r.Debug {
+				fmt.Printf("%s \n", prettyPrint(decoded))
+			}
+
+			for _, c := range checkJSON {
+				keys := strings.Split(c.Key, ".")
+				lastKey := keys[len(keys)-1]
+				found, val := findNested(decoded, lastKey)
+				if found {
+					switch vt := val.(type) {
+					// if val is an array
+					case []interface{}:
+						for _, v := range vt {
+							if !isAllowed(v, c.AllowedValues) {
+								errString := fmt.Sprintf("Found forbidden value: %v for key %s", v, c.Key)
+								fmt.Println(errString)
+								writeError(w, errString, http.StatusUnauthorized)
+								return
+							}
+						}
+					// if val is a single object
+					case interface{}:
+						if !isAllowed(val, c.AllowedValues) {
+							errString := fmt.Sprintf("Found forbidden value: %v for key %s", val, c.Key)
+							fmt.Println(errString)
+							writeError(w, errString, http.StatusUnauthorized)
+							return
+						}
+					}
+				} else {
+					// TODO: this should trigger notice, that routes*.json is not configured well
+					fmt.Printf("key '%s' not found\n", lastKey)
+				}
+			}
+
+			encoded, err := json.Marshal(decoded)
+			if err != nil {
+				writeError(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			// reset it so that upstream can read it again
+			req.ContentLength = int64(len(encoded))
+			req.Body = ioutil.NopCloser(bytes.NewReader(encoded))
+		}
 
 		upstream.ServeHTTP(w, req)
 	})
@@ -166,7 +240,7 @@ func findNested(m map[string]interface{}, key string) (bool, interface{}) {
 	return false, nil
 }
 
-// aux function to match allowed_values with values in json
+// aux function to match allowed_values with values in json / param
 func isAllowed(value interface{}, allowedValues []interface{}) bool {
 	var matchString = func(v string, a string) bool {
 		fmt.Printf("Check allowed: '%s' against '%s'\n", v, a)

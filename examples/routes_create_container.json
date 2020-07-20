@@ -2,7 +2,13 @@
   "routes_allowed": [
     {
       "method": "GET",
-      "pattern": "^/containers/json$"
+      "pattern": "^/containers/json$",
+      "append_label": [
+        {
+          "filter_key": "name",
+          "allowed_values": ["molecule"]
+        }
+      ]
     },
     {
       "method": "POST",
@@ -15,6 +21,12 @@
         {
           "key": "Tty",
           "allowed_values": [true]
+        }
+      ],
+      "check_param": [
+        {
+          "param": "name",
+          "allowed_values": ["molecule"]
         }
       ]
     },

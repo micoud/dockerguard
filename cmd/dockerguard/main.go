@@ -36,10 +36,15 @@ func main() {
 	// read the routes config from file
 	routesAllowed := config.RoutesConfig(*configfile)
 	for _, r := range routesAllowed.Routes {
+		fmt.Printf("Route allowed: %s, %s \n", r.Method, r.Pattern)
 		if r.CheckJSON != nil {
-			fmt.Printf("Routes allowed: method %s, pattern %s, check_json %v\n", r.Method, r.Pattern, r.CheckJSON)
-		} else {
-			fmt.Printf("Routes allowed: method %s, pattern %s\n", r.Method, r.Pattern)
+			fmt.Printf("\t JSON key to check: %v\n", r.CheckJSON)
+		}
+		if r.CheckParam != nil {
+			fmt.Printf("\t URL Param to check: %v\n", r.CheckParam)
+		}
+		if r.AppendLabel != nil {
+			fmt.Printf("\t Labels to append: %v\n", r.AppendLabel)
 		}
 	}
 
