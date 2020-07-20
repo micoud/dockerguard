@@ -79,10 +79,10 @@ Note: to learn about Docker API endpoints, consult the [documentation](https://d
 
 ## TODOs
 
-* [*] dockerize
-* [*] Jenkinsfile
-* [*] mechanism to check posted JSONs
-* [*] mechanism to check URL parameters
+* [x] dockerize
+* [x] Jenkinsfile
+* [x] mechanism to check posted JSONs
+* [x] mechanism to check URL parameters
 * [ ] finish implementation of label adding
 * [ ] review which HTTP statuscodes should be used where
 * [ ] add mechanism to manipulate jsons in request bodies (e.g. for services)
