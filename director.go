@@ -264,6 +264,18 @@ func isAllowed(value interface{}, allowedValues []interface{}) bool {
 		return v == a
 	}
 
+	var matchJSON = func(v map[string]interface{}, a map[string]interface{}) bool {
+		fmt.Printf("Check allowed: '%v' against '%v'\n", v, a)
+		for ka, va := range a {
+			for kv, vv := range v {
+				if kv == ka && va == vv {
+					return true
+				}
+			}
+		}
+		return false
+	}
+
 	for _, a := range allowedValues {
 		if reflect.TypeOf(value) == reflect.TypeOf(a) {
 			switch vt := value.(type) {
@@ -287,7 +299,9 @@ func isAllowed(value interface{}, allowedValues []interface{}) bool {
 				}
 			case map[string]interface{}:
 				if a, ok := a.(map[string]interface{}); ok {
-					fmt.Printf("a %v", a)
+					if matchJSON(vt, a) {
+						return true
+					}
 				}
 			}
 		} else {

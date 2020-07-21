@@ -43,3 +43,25 @@ func testFindNested(t *testing.T, json map[string]interface{}, keys []string, ex
 		t.Errorf("Value was incorrect, got %s, want %s", val, expected)
 	}
 }
+
+func TestIsAllowed(t *testing.T) {
+	value := []byte(`{"Aliases": ["manager"], "Target": "jenkins" }`)
+	allowed := []byte(`[{"Target": "jenkins"}]`)
+
+	var decodedValue interface{}
+	err := json.Unmarshal(value, &decodedValue)
+	if err != nil {
+		panic(err)
+	}
+
+	var decodedAllowed []interface{}
+	err = json.Unmarshal(allowed, &decodedAllowed)
+	if err != nil {
+		panic(err)
+	}
+
+	ok := isAllowed(decodedValue, decodedAllowed)
+	if !ok {
+		t.Errorf("Value %v not matching %v", decodedValue, decodedAllowed)
+	}
+}

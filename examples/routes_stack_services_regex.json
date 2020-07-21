@@ -21,7 +21,7 @@
         {
           "key": ["TaskTemplate", "Networks"],
           "allowed_values": [
-            {"Target": "jekins"}
+            {"Target": "jenkins"}
           ]
         }
       ]
