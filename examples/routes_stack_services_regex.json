@@ -1,9 +1,6 @@
 {
   "routes_allowed": [
     {
-      "method": ""
-    },
-    {
       "method": "GET",
       "pattern": "^/services$",
       "append_filter": [
@@ -23,10 +20,9 @@
         },
         {
           "key": ["TaskTemplate", "Networks"],
-          "allowed_values": [{"Target": "jekins"}]
-        },
-        {
-
+          "allowed_values": [
+            {"Target": "jekins"}
+          ]
         }
       ]
     },

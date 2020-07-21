@@ -194,7 +194,7 @@ func (r *RulesDirector) checkRequest(l socketproxy.Logger, req *http.Request, up
 					}
 				} else {
 					// TODO: this should trigger notice, that routes*.json is not configured well
-					fmt.Printf("key '%s' not found\n", strings.Join(c.Key, "."))
+					fmt.Printf("Key '%s' not found\n", strings.Join(c.Key, "."))
 				}
 			}
 
@@ -221,24 +221,27 @@ func prettyPrint(i interface{}) string {
 
 // aux function to find nested key 'key' in map
 func findNested(m map[string]interface{}, keys []string) (bool, interface{}) {
-	//fmt.Printf("keys: %s, len(keys) %d\n", keys, len(keys))
+	// fmt.Printf("keys: %s, len(keys) %d\n", keys, len(keys))
 	// already reached the last level
-	for k, v := range m {
-		if k == keys[0] && len(keys) == 1 {
-			// fmt.Printf("%s %s %v\n", keys[0], k, v)
-			return true, v
+	if keys != nil {
+		for k, v := range m {
+			if k == keys[0] && len(keys) == 1 {
+				// fmt.Printf("%s %s %v\n", keys[0], k, v)
+				return true, v
+			}
 		}
-	}
 
-	for _, v := range m {
-		nm, ok := v.(map[string]interface{})
-		if ok && len(keys) > 1 {
-			found, val := findNested(nm, keys[1:])
-			if found {
-				return found, val
+		for _, v := range m {
+			nm, ok := v.(map[string]interface{})
+			if ok && len(keys) > 1 {
+				found, val := findNested(nm, keys[1:])
+				if found {
+					return found, val
+				}
 			}
 		}
 	}
+
 	// not found at all
 	return false, nil
 }
@@ -281,6 +284,10 @@ func isAllowed(value interface{}, allowedValues []interface{}) bool {
 					if matchString(vt, a) {
 						return true
 					}
+				}
+			case map[string]interface{}:
+				if a, ok := a.(map[string]interface{}); ok {
+					fmt.Printf("a %v", a)
 				}
 			}
 		} else {

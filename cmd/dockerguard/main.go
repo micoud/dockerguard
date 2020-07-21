@@ -69,7 +69,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Listening on port " + strconv.Itoa(*port) + "...")
+	fmt.Printf("Listening on port " + strconv.Itoa(*port) + "...\n")
 
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, os.Kill, syscall.SIGTERM)

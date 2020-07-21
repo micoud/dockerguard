@@ -1,0 +1,21 @@
+version: '3'
+
+networks:
+  jenkins:
+    external: true
+
+services:
+  manager:
+    image: registry.cta-test.zeuthen.desy.de/actl_dev_mm:V20-06-00_ACS2020.2_manager
+    hostname: actl-dev-mm_79af4922-3c04-420b-87bb-e0e7e9874d5d
+    ports:
+     - 2222:22
+    networks:
+      - jenkins
+
+  worker:
+    image: registry.cta-test.zeuthen.desy.de/actl_dev_mm:V20-06-00_ACS2020.2_worker
+    depends_on:
+     - manager
+    networks:
+      - jenkins
