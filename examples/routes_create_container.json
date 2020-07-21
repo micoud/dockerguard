@@ -15,11 +15,11 @@
       "pattern": "^/containers/create$",
       "check_json": [
         {
-          "key": "HostConfig.Binds",
+          "key": ["HostConfig", "Binds"],
           "allowed_values": ["^/home/klemens","^/var/run/docker.sock"]
         },
         {
-          "key": "Tty",
+          "key": ["Tty"],
           "allowed_values": [true]
         }
       ],

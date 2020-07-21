@@ -90,3 +90,4 @@ Note: to learn about Docker API endpoints, consult the [documentation](https://d
 * [ ] review which HTTP statuscodes should be used where
 * [ ] add mechanism to manipulate jsons in request bodies (e.g. for services)
 * [ ] add tests
+  * [x] test for findNested

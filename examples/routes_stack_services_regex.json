@@ -1,0 +1,62 @@
+{
+  "routes_allowed": [
+    {
+      "method": ""
+    },
+    {
+      "method": "GET",
+      "pattern": "^/services$",
+      "append_filter": [
+        {
+          "filter_key": "name",
+          "values": ["acs"]
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "pattern": "^/services/create$",
+      "check_json": [
+        {
+          "key": ["Name"],
+          "allowed_values": ["acs","actl"]
+        },
+        {
+          "key": ["TaskTemplate", "Networks"],
+          "allowed_values": [{"Target": "jekins"}]
+        },
+        {
+
+        }
+      ]
+    },
+    {
+      "method": "DELETE",
+      "pattern": "^/services/([a-f0-9]{1,64})$"
+    },
+    {
+      "method": "GET",
+      "pattern": "^/tasks$"
+    },
+    {
+      "method": "GET",
+      "pattern": "^/nodes$"
+    },
+    {
+      "method": "GET",
+      "pattern": "^/networks(/jenkins)*$"
+    },
+    {
+      "method": "GET",
+      "pattern": "^/distribution/registry.cta-test.zeuthen.desy.de/(.*actl.*)/json$"
+    },
+    {
+      "method": "GET",
+      "pattern": "^/secrets$"
+    },
+    {
+      "method": "GET",
+      "pattern": "^/configs$"
+    }
+  ]
+}

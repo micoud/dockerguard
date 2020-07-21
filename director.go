@@ -140,7 +140,7 @@ func (r *RulesDirector) checkRequest(l socketproxy.Logger, req *http.Request, up
 
 				// add values to filter param
 				for _, v := range f.Values {
-					l.Printf("Adding '%v' to filters '%v'", v, f.FilterKey)
+					l.Printf("Adding '%v' to filter '%v'", v, f.FilterKey)
 					filters[f.FilterKey] = append(filters[f.FilterKey], v)
 				}
 			}
@@ -170,9 +170,7 @@ func (r *RulesDirector) checkRequest(l socketproxy.Logger, req *http.Request, up
 			}
 
 			for _, c := range checkJSON {
-				keys := strings.Split(c.Key, ".")
-				lastKey := keys[len(keys)-1]
-				found, val := findNested(decoded, lastKey)
+				found, val := findNested(decoded, c.Key)
 				if found {
 					switch vt := val.(type) {
 					// if val is an array
@@ -196,7 +194,7 @@ func (r *RulesDirector) checkRequest(l socketproxy.Logger, req *http.Request, up
 					}
 				} else {
 					// TODO: this should trigger notice, that routes*.json is not configured well
-					fmt.Printf("key '%s' not found\n", lastKey)
+					fmt.Printf("key '%s' not found\n", strings.Join(c.Key, "."))
 				}
 			}
 
@@ -222,18 +220,20 @@ func prettyPrint(i interface{}) string {
 }
 
 // aux function to find nested key 'key' in map
-func findNested(m map[string]interface{}, key string) (bool, interface{}) {
-	// try to find key on current level
+func findNested(m map[string]interface{}, keys []string) (bool, interface{}) {
+	//fmt.Printf("keys: %s, len(keys) %d\n", keys, len(keys))
+	// already reached the last level
 	for k, v := range m {
-		if k == key {
+		if k == keys[0] && len(keys) == 1 {
+			// fmt.Printf("%s %s %v\n", keys[0], k, v)
 			return true, v
 		}
 	}
-	// not found on current level, go deeper
+
 	for _, v := range m {
 		nm, ok := v.(map[string]interface{})
-		if ok {
-			found, val := findNested(nm, key)
+		if ok && len(keys) > 1 {
+			found, val := findNested(nm, keys[1:])
 			if found {
 				return found, val
 			}

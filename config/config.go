@@ -36,7 +36,7 @@ type CheckParam struct {
 // CheckJSON ... struct with keys and
 // an array of allowed values to check for in posted JSONs
 type CheckJSON struct {
-	Key           string        `json:"key"`
+	Key           []string      `json:"key"`
 	AllowedValues []interface{} `json:"allowed_values"`
 }
 
