@@ -6,7 +6,7 @@
       "append_filter": [
         {
           "filter_key": "name",
-          "values": ["mole"]
+          "values": ["molecule"]
         }
       ]
     },

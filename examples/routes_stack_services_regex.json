@@ -2,6 +2,16 @@
   "routes_allowed": [
     {
       "method": "GET",
+      "pattern": "^/containers/json$",
+      "append_filter": [
+        {
+          "filter_key": "network",
+          "values": ["jenkins"]
+        }
+      ]
+    },
+    {
+      "method": "GET",
       "pattern": "^/services$",
       "append_filter": [
         {
@@ -16,7 +26,7 @@
       "check_json": [
         {
           "key": ["Name"],
-          "allowed_values": ["acs","actl"]
+          "allowed_values": ["acs"]
         },
         {
           "key": ["TaskTemplate", "Networks"],
@@ -28,7 +38,15 @@
     },
     {
       "method": "DELETE",
-      "pattern": "^/services/([a-f0-9]{1,64})$"
+      "pattern": "^/services/(\\w{1,64})$"
+    },
+    {
+      "method": "POST",
+      "pattern": "^/services/(\\w{1,64})/update$"
+    },
+    {
+      "method": "GET",
+      "pattern": "^/services/(acs.*)$"
     },
     {
       "method": "GET",
@@ -40,7 +58,17 @@
     },
     {
       "method": "GET",
-      "pattern": "^/networks(/jenkins)*$"
+      "pattern": "^/networks/jenkins$"
+    },
+    {
+      "method": "GET",
+      "pattern": "^/networks$",
+      "append_filter": [
+        {
+          "filter_key": "name",
+          "values": ["jenkins"]
+        }
+      ]
     },
     {
       "method": "GET",

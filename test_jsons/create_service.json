@@ -15,6 +15,18 @@
               "com.example.something": "something-value"
             }
           }
+        },
+        {
+          "ReadOnly": true,
+          "Source": "data",
+          "Target": "/scratch",
+          "Type": "volume",
+          "VolumeOptions": {
+            "DriverConfig": {},
+            "Labels": {
+              "com.example.something": "something-value"
+            }
+          }
         }
       ],
       "Hosts": [

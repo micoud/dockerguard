@@ -249,31 +249,62 @@ func findNested(m map[string]interface{}, keys []string) (bool, interface{}) {
 // aux function to match allowed_values with values in json / param
 func isAllowed(value interface{}, allowedValues []interface{}) bool {
 	var matchString = func(v string, a string) bool {
-		fmt.Printf("Check allowed: '%s' against '%s'\n", v, a)
+		fmt.Printf("Check allowed string: '%s' against '%s'\n", v, a)
 		re := regexp.MustCompile(a)
 		return re.MatchString(v)
 	}
 
 	var matchFloat = func(v float64, a float64) bool {
-		fmt.Printf("Check allowed: '%f' against '%f'\n", v, a)
+		fmt.Printf("Check allowed number: '%f' against '%f'\n", v, a)
 		return v == a
 	}
 
 	var matchBool = func(v bool, a bool) bool {
-		fmt.Printf("Check allowed: '%t' against '%t'\n", v, a)
+		fmt.Printf("Check allowed bool: '%t' against '%t'\n", v, a)
 		return v == a
 	}
 
 	var matchJSON = func(v map[string]interface{}, a map[string]interface{}) bool {
-		fmt.Printf("Check allowed: '%v' against '%v'\n", v, a)
-		for ka, va := range a {
-			for kv, vv := range v {
-				if kv == ka && va == vv {
-					return true
+		fmt.Printf("Check allowed JSON: '%v' against '%v'\n", v, a)
+		for kv, vv := range v {
+			for ka, va := range a {
+				if kv == ka {
+					// fmt.Printf("Check key:%s - val '%v' (%v) vs allowed '%v' (%v)\n", kv, vv, reflect.TypeOf(vv), va, reflect.TypeOf(va))
+					if reflect.TypeOf(vv) == reflect.TypeOf(va) {
+						switch vt := vv.(type) {
+						case bool:
+							if va, ok := va.(bool); ok {
+								fmt.Printf("Check allowed bool: '%t' against '%t'\n", vt, va)
+								if vt != va {
+									return false
+								}
+							}
+						case float64:
+							if va, ok := va.(float64); ok {
+								fmt.Printf("Check allowed number: '%f' against '%f'\n", vt, va)
+								if vt != va {
+									return false
+								}
+							}
+						case string:
+							if va, ok := va.(string); ok {
+								fmt.Printf("Check allowed string: '%s' against '%s'\n", vt, va)
+								re := regexp.MustCompile(va)
+								if !re.MatchString(vt) {
+									return false
+								}
+							}
+						default:
+							return false
+						}
+					} else {
+						fmt.Printf("Types do not match! Not allowed.\n")
+						return false
+					}
 				}
 			}
 		}
-		return false
+		return true
 	}
 
 	for _, a := range allowedValues {

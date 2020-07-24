@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -29,24 +30,41 @@ func TestFindJSONKey(t *testing.T) {
 	testFindNested(t, decoded, []string{"TaskTemplate", "LogDriver", "Options", "max-size"}, "10M")
 	testFindNested(t, decoded, []string{"TaskTemplate", "ContainerSpec", "Image"}, "nginx:alpine")
 
-	// different 'Labels'
+	// 'Labels'
 	testFindNested(t, decoded, []string{"Labels", "foo"}, "bar")
-	testFindNested(t, decoded, []string{"TaskTemplate", "ContainerSpec", "Mounts", "VolumenOptions", "Labels", "com.example.something"}, "bar")
+
+	expectedJSONString := []byte(`[
+		{
+		  "Protocol": "tcp",
+		  "PublishedPort": 8080,
+		  "TargetPort": 80
+		}
+	      ]`)
+	expectedJSON := make([]map[string]interface{}, 0)
+	err = json.Unmarshal(expectedJSONString, &expectedJSON)
+	if err != nil {
+		panic(err)
+	}
+	// this yields a type mismatch ([]interface vs []map[string]interface{})
+	testFindNested(t, decoded, []string{"EndpointSpec", "Ports"}, expectedJSON)
 }
 
-func testFindNested(t *testing.T, json map[string]interface{}, keys []string, expected string) {
+func testFindNested(t *testing.T, json map[string]interface{}, keys []string, expected interface{}) {
 	found, val := findNested(json, keys)
 	if !found {
 		t.Errorf("Key '%s' was not found \n", strings.Join(keys, "."))
 	}
+	if reflect.TypeOf(val) != reflect.TypeOf(expected) {
+		t.Errorf("Types of val and expected are different %s != %s", reflect.TypeOf(val), reflect.TypeOf(expected))
+	}
 	if val != expected {
-		t.Errorf("Value was incorrect, got %s, want %s", val, expected)
+		t.Errorf("Value was incorrect, got '%s', want '%s'", prettyPrint(val), prettyPrint(expected))
 	}
 }
 
 func TestIsAllowed(t *testing.T) {
-	value := []byte(`{"Aliases": ["manager"], "Target": "jenkins" }`)
-	allowed := []byte(`[{"Target": "jenkins"}]`)
+	value := []byte(`{"Source": "/mnt/scratch/", "Target": 10, "ReadOnly": true, "Labels": {"com.example.something": "something-value"}}`)
+	allowed := []byte(`[{"Source": "^/mnt/scratch", "Target": 10, "ReadOnly": true}]`)
 
 	var decodedValue interface{}
 	err := json.Unmarshal(value, &decodedValue)
