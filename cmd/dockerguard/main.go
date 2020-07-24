@@ -44,7 +44,7 @@ func main() {
 			fmt.Printf("\t URL Param to check: %v\n", r.CheckParam)
 		}
 		if r.AppendFilter != nil {
-			fmt.Printf("\t Labels to append: %v\n", r.AppendFilter)
+			fmt.Printf("\t Filters to append: %v\n", r.AppendFilter)
 		}
 	}
 

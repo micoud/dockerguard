@@ -15,15 +15,23 @@ type route struct {
 	Method       string         `json:"method"`
 	Pattern      string         `json:"pattern"`
 	AppendFilter []AppendFilter `json:"append_filter"`
+	CheckFilter  []CheckFilter  `json:"check_filter"`
 	CheckParam   []CheckParam   `json:"check_param"`
 	CheckJSON    []CheckJSON    `json:"check_json"`
 }
 
-// AppendFilter ... struct with API filter to check and
-// an array of allowed values
+// AppendFilter ... struct with API filter to append values to and
+// an array of values to append
 type AppendFilter struct {
 	FilterKey string        `json:"filter_key"`
 	Values    []interface{} `json:"values"`
+}
+
+// CheckFilter ... struct with API filter to check and
+// an array of allowed values
+type CheckFilter struct {
+	FilterKey     string        `json:"filter_key"`
+	AllowedValues []interface{} `json:"allowed_values"`
 }
 
 // CheckParam ... struct with URL params to check and
