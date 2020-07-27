@@ -172,7 +172,6 @@ func (r *RulesDirector) checkRequest(l socketproxy.Logger, req *http.Request, up
 					http.Error(w, err.Error(), http.StatusBadRequest)
 					return
 				}
-
 				// different docker implementations send us different data structures
 				for k, v := range existing {
 					switch tv := v.(type) {
@@ -191,15 +190,17 @@ func (r *RulesDirector) checkRequest(l socketproxy.Logger, req *http.Request, up
 				}
 			}
 			for _, f := range checkFilter {
-				if v, exists := filters[f.FilterKey]; !exists {
-					if !isAllowed(v, f.AllowedValues) {
-						errString := fmt.Sprintf("Found forbidden value: %v for filter %s", v, f.FilterKey)
-						fmt.Println(errString)
-						writeError(w, errString, http.StatusUnauthorized)
-						return
+				if v, exists := filters[f.FilterKey]; exists {
+					for _, vv := range v {
+						fmt.Printf("Checking filter '%v' vs '%v'\n", prettyPrint(vv), prettyPrint(f.AllowedValues))
+						if !isAllowed(vv, f.AllowedValues) {
+							errString := fmt.Sprintf("Found forbidden value: %v for filter %s", vv, f.FilterKey)
+							fmt.Println(errString)
+							writeError(w, errString, http.StatusUnauthorized)
+							return
+						}
 					}
 				}
-
 			}
 		}
 

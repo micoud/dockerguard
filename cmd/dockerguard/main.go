@@ -46,6 +46,9 @@ func main() {
 		if r.AppendFilter != nil {
 			fmt.Printf("\t Filters to append: %v\n", r.AppendFilter)
 		}
+		if r.CheckFilter != nil {
+			fmt.Printf("\t Filters to check: %v\n", r.CheckFilter)
+		}
 	}
 
 	// dial upstreamproxy

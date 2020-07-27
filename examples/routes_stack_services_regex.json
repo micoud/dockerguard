@@ -12,11 +12,19 @@
     },
     {
       "method": "GET",
+      "pattern": "^/containers/(\\w{1,64})/json$"
+    },
+    {
+      "method": "GET",
+      "pattern": "^/images/(\\w{1,64})/json$"
+    },
+    {
+      "method": "GET",
       "pattern": "^/services$",
       "append_filter": [
         {
           "filter_key": "name",
-          "values": ["acs"]
+          "values": ["acs", "dpt"]
         }
       ]
     },
@@ -33,6 +41,13 @@
           "allowed_values": [
             {"Target": "jenkins"}
           ]
+        },
+        {
+          "key": ["TaskTemplate", "ContainerSpec", "Mounts"],
+          "allowed_values": [
+            {"Source": "^/mnt/scratch", "Type": "bind"},
+            {"Source": "^/mnt/storage/docker/jenkins_worker", "Type": "bind"}
+          ]
         }
       ]
     },
@@ -46,11 +61,21 @@
     },
     {
       "method": "GET",
-      "pattern": "^/services/(acs.*)$"
+      "pattern": "^/services/(\\w{1,64}|acs.*)$"
     },
     {
       "method": "GET",
-      "pattern": "^/tasks$"
+      "pattern": "^/tasks$",
+      "check_filter": [
+        {
+          "filter_key": "label",
+          "allowed_values": [{"com.docker.stack.namespace=(jenkins|acs)": true}]
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "pattern": "^/tasks/(\\w{1,64})$"
     },
     {
       "method": "GET",
@@ -58,7 +83,11 @@
     },
     {
       "method": "GET",
-      "pattern": "^/networks/jenkins$"
+      "pattern": "^/nodes/(\\w{1,64})$"
+    },
+    {
+      "method": "GET",
+      "pattern": "^/networks/(jenkins|\\w{1,64})$"
     },
     {
       "method": "GET",
@@ -81,6 +110,10 @@
     {
       "method": "GET",
       "pattern": "^/configs$"
+    },
+    {
+      "method": "GET",
+      "pattern": "^/volumes/(\\w{1,64})$"
     }
   ]
 }
