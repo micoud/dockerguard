@@ -62,7 +62,7 @@ Routes that should be allowed are defined in json files with the following struc
 }
 ```
 
-where method can be `GET`, `POST` or both matched by `*`. The pattern is a [golang regular expression](https://golang.org/pkg/regexp/syntax/) pattern. Regular expressions can be tested [here](https://regex-golang.appspot.com/assets/html/index.html)
+where method can be `GET`, `POST` or both matched by `*`. The pattern is a [golang regular expression](https://golang.org/pkg/regexp/syntax/) pattern. Regular expressions can be tested [here](https://regex101.com/)
 
 Regular expressions can be used, e.g., to allow only container names that match 'mariadb'.
 

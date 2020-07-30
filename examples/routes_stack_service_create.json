@@ -10,7 +10,7 @@
     },
     {
       "method": "POST",
-      "pattern": "^/images/registry.cta-test.zeuthen.desy.de/(dockerguard|jenkins|actl|sonarqube|nexus)/push$"
+      "pattern": "^/images/registry.cta-test.zeuthen.desy.de/(dockerguard.*|jenkins.*|actl.*|sonarqube.*|nexus.*)/push$"
     },
     {
       "method": "POST",
