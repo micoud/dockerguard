@@ -2,21 +2,19 @@
   "routes_allowed": [
     {
       "method": "GET",
-      "pattern": "^/containers/json$",
-      "append_filter": [
-        {
-          "filter_key": "network",
-          "values": ["jenkins"]
-        }
-      ]
-    },
-    {
-      "method": "GET",
       "pattern": "^/containers/(\\w{1,64})/json$"
     },
     {
       "method": "GET",
       "pattern": "^/images/(\\w{1,64})/json$"
+    },
+    {
+      "method": "POST",
+      "pattern": "^/images/registry.cta-test.zeuthen.desy.de/(dockerguard|jenkins|actl|sonarqube|nexus)/push$"
+    },
+    {
+      "method": "POST",
+      "pattern": "^/build$"
     },
     {
       "method": "GET",
@@ -25,6 +23,12 @@
         {
           "filter_key": "name",
           "values": ["acs", "dpt"]
+        }
+      ],
+      "check_filter": [
+        {
+          "filter_key": "name",
+          "allowed_values": ["acs", "dpt"]
         }
       ]
     },
@@ -61,7 +65,7 @@
     },
     {
       "method": "GET",
-      "pattern": "^/services/(\\w{1,64}|acs.*)$"
+      "pattern": "^/services/(\\w{1,64}|acs.*|dpt.*)$"
     },
     {
       "method": "GET",
@@ -69,7 +73,7 @@
       "check_filter": [
         {
           "filter_key": "label",
-          "allowed_values": [{"com.docker.stack.namespace=(jenkins|acs)": true}]
+          "allowed_values": ["com.docker.stack.namespace=(acs|dpt)"]
         }
       ]
     },
@@ -87,7 +91,7 @@
     },
     {
       "method": "GET",
-      "pattern": "^/networks/(jenkins|\\w{1,64})$"
+      "pattern": "^/networks/(jenkins|proxy-docker|\\w{1,64})$"
     },
     {
       "method": "GET",
@@ -95,7 +99,7 @@
       "append_filter": [
         {
           "filter_key": "name",
-          "values": ["jenkins"]
+          "values": ["jenkins", "proxy-docker"]
         }
       ]
     },

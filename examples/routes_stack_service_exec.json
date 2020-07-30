@@ -1,0 +1,16 @@
+{
+  "routes_allowed": [
+    {
+      "method": "GET",
+      "pattern": "^/containers/json$"
+    },
+    {
+      "method": "*",
+      "pattern": "^/containers/([a-f0-9]{1,64})/(json|start|stop|exec)$"
+    },
+    {
+      "method": "*",
+      "pattern": "^/exec/([a-f0-9]{1,64})/(start|json|resize)$"
+    }
+  ]
+}

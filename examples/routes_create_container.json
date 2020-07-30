@@ -11,6 +11,10 @@
       ]
     },
     {
+      "method": "GET",
+      "pattern": "^/containers/(\\w{1,64})/json$"
+    },
+    {
       "method": "POST",
       "pattern": "^/containers/create$",
       "check_json": [
