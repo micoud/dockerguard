@@ -36,7 +36,7 @@
     },
     {
       "method": "POST",
-      "pattern": "^/containers/([a-f0-9]{1,64})/(attach|wait|start|resize)$"
+      "pattern": "^/containers/(\\w{1,64})/(attach|wait|start|resize)$"
     },
     {
       "method": "*",
@@ -44,7 +44,7 @@
     },
     {
       "method": "*",
-      "pattern": "^/exec/([a-f0-9]{1,64})/(start|json|resize)$"
+      "pattern": "^/exec/(\\w{1,64})/(start|json|resize)$"
     }
   ]
 }
