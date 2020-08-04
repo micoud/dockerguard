@@ -32,7 +32,7 @@ Here the most important docker calls for the usage in a CI setup (e.g. from a Je
   * `GET - /v1.40/tasks?filters=%7B%22service%22%3A%7B%22<id>%22%3Atrue%2C%22<id2>%22%3Atrue%7D%7D` (the filters contain the ids that the former api call has returned)
   * `GET - /v1.40/nodes`
 * **start a stack** defined in a compose file `docker stack deploy -c <stack.yml> <stack>`
-  *`GET - /v1.40/networks/<network name requested>` (the network requested could be the one to which CI containers are detached)
+  * `GET - /v1.40/networks/<network name requested>` (the network requested could be the one to which CI containers are detached)
   * `GET - /v1.40/networks?filters=%7B%22label%22%3A%7B%22com.docker.stack.namespace%3D<stack-name>%22%3Atrue%7D%7D` (the filter com.docker.stack.namespace=stack-name is added by the client) - an additional filter for network names might be added
   * `GET - /v1.40/services?filters=%7B%22label%22%3A%7B%22com.docker.stack.namespace%3D<stack-name>%22%3Atrue%7D%7D` - additional filters might be added
   * `GET - /v1.40/distribution/<registry-name>/<image-name>/json` - registry-name and image-name should be defined by regular expressions to match allowed images
@@ -43,8 +43,8 @@ Here the most important docker calls for the usage in a CI setup (e.g. from a Je
 * **list processes/tasks that belong to a service** `docker service ps <service_name>`
   * `GET - /v1.40/services?filters=%7B%22id%22%3A%7B%22<service-name>%22%3Atrue%7D%7D` (additional filters might be configured, see above)
   * `GET - /v1.40/services?filters=%7B%22name%22%3A%7B%22<service-name>%22%3Atrue%7D%7D` same call again but this time with name-filter instead of id-filter
-  * `GET - /v1.40/tasks?filters=%7B%22service%22%3A%7B%22<id>%22%3Atrue%7D%7D` id is the one that was returned by the last request
-  * `GET - /v1.40/services/<id>?insertDefaults=false` - the id is the one that was returned by the last request
+  * `GET - /v1.40/tasks?filters=%7B%22service%22%3A%7B%22<service-id>%22%3Atrue%7D%7D` id is the one that was returned by the last request
+  * `GET - /v1.40/services/<service-id>?insertDefaults=false` - the id is the one that was returned by the last request
   * `GET - /v1.40/nodes/<node-id>`
 * **stop a stack** `docker stack rm <stack-name>`
   * `GET - /v1.40/services?filters=%7B%22label%22%3A%7B%22com.docker.stack.namespace%3D<stack-name>%22%3Atrue%7D%7D`
@@ -53,6 +53,29 @@ Here the most important docker calls for the usage in a CI setup (e.g. from a Je
   * `GET - /v1.40/configs?filters=%7B%22label%22%3A%7B%22com.docker.stack.namespace%3D<stack-name>%22%3Atrue%7D%7D`
   * `DELETE - /v1.40/services/<service-id>` this endpoint is called for every service that should be stopped, the ids come from previous calls
 
+
+## Exec command in service
+
+* **execute a command in a service container**
+
+```bash
+> docker service ps --filter 'desired-state=running' $SERVICE_NAME -q                      # -> TASK_ID
+> docker inspect --format '{{ .NodeID }}' $TASK_ID                                         # -> NODE_ID
+> docker inspect --format '{{ .Status.ContainerStatus.ContainerID }}' $TASK_ID             # -> CONTAINER_ID
+> docker node inspect --format '{{ .Description.Hostname }}' $NODE_ID | cut -d '.' -f 1    # -> NODE_HOST
+```
+
+calls made by this commands
+
+* `GET - /v1.40/services?filters=%7B%22id%22%3A%7B%22<service_name>%22%3Atrue%7D%7D`
+* `GET - /v1.40/services?filters=%7B%22name%22%3A%7B%22<service_name>%22%3Atrue%7D%7D`
+* `GET - /v1.40/tasks?filters=%7B%22desired-state%22%3A%7B%22running%22%3Atrue%7D%2C%22service%22%3A%7B%22<service-id>%22%3Atrue%7D%7D` (task id returned from previous request)
+* `GET - /v1.40/services/<task-id>?insertDefaults=false`
+* `GET - /v1.40/nodes/<node-id>`
+* `GET - /v1.40/containers/<task-id>/json`
+* `GET - /v1.40/images/<task-id>/json`
+
+Calls for subsequent `docker exec` calls are listed above.
 
 ## Notes
 

@@ -2,15 +2,15 @@
   "routes_allowed": [
     {
       "method": "GET",
-      "pattern": "^/containers/(\\w{1,64})/json$"
+      "pattern": "^/containers/([a-z0-9]{1,64})/json$"
     },
     {
       "method": "GET",
-      "pattern": "^/images/(\\w{1,64})/json$"
+      "pattern": "^/images/([a-z0-9]{1,64})/json$"
     },
     {
       "method": "POST",
-      "pattern": "^/images/registry.cta-test.zeuthen.desy.de/(dockerguard.*|jenkins.*|actl.*|sonarqube.*|nexus.*)/push$"
+      "pattern": "^/images/registry\\.cta-test\\.zeuthen\\.desy\\.de/(dockerguard.*|jenkins.*|.*actl.*|sonarqube.*|nexus.*|.*acs.*)/push$"
     },
     {
       "method": "POST",
@@ -22,13 +22,13 @@
       "append_filter": [
         {
           "filter_key": "name",
-          "values": ["acs", "dpt"]
+          "values": ["acs"]
         }
       ],
       "check_filter": [
         {
           "filter_key": "name",
-          "allowed_values": ["acs", "dpt"]
+          "allowed_values": ["acs"]
         }
       ]
     },
@@ -43,7 +43,7 @@
         {
           "key": ["TaskTemplate", "Networks"],
           "allowed_values": [
-            {"Target": "jenkins"}
+            {"Target": "^jenkins$"}
           ]
         },
         {
@@ -57,15 +57,15 @@
     },
     {
       "method": "DELETE",
-      "pattern": "^/services/(\\w{1,64})$"
+      "pattern": "^/services/([a-z0-9]{1,64})$"
     },
     {
       "method": "POST",
-      "pattern": "^/services/(\\w{1,64})/update$"
+      "pattern": "^/services/([a-z0-9]{1,64})/update$"
     },
     {
       "method": "GET",
-      "pattern": "^/services/(\\w{1,64}|acs.*|dpt.*)$"
+      "pattern": "^/services/([a-z0-9]{1,64}|acs.*|)$"
     },
     {
       "method": "GET",
@@ -73,13 +73,13 @@
       "check_filter": [
         {
           "filter_key": "label",
-          "allowed_values": ["com.docker.stack.namespace=(acs|dpt)"]
+          "allowed_values": ["com.docker.stack.namespace=(acs)"]
         }
       ]
     },
     {
       "method": "GET",
-      "pattern": "^/tasks/(\\w{1,64})$"
+      "pattern": "^/tasks/([a-z0-9]{1,64})$"
     },
     {
       "method": "GET",
@@ -87,11 +87,11 @@
     },
     {
       "method": "GET",
-      "pattern": "^/nodes/(\\w{1,64})$"
+      "pattern": "^/nodes/([a-z0-9]{1,64})$"
     },
     {
       "method": "GET",
-      "pattern": "^/networks/(jenkins|proxy-docker|\\w{1,64})$"
+      "pattern": "^/networks/(jenkins|proxy-docker|[a-z0-9]{1,64})$"
     },
     {
       "method": "GET",
@@ -99,13 +99,13 @@
       "append_filter": [
         {
           "filter_key": "name",
-          "values": ["jenkins", "proxy-docker"]
+          "values": ["^jenkins$", "^proxy-docker$"]
         }
       ]
     },
     {
       "method": "GET",
-      "pattern": "^/distribution/registry.cta-test.zeuthen.desy.de/(.*actl.*)/json$"
+      "pattern": "^/distribution/registry\\.cta-test\\.zeuthen\\.desy\\.de/.*(actl|acs).*/json$"
     },
     {
       "method": "GET",
@@ -117,7 +117,7 @@
     },
     {
       "method": "GET",
-      "pattern": "^/volumes/(\\w{1,64})$"
+      "pattern": "^/volumes/([a-z0-9]{1,64})$"
     }
   ]
 }

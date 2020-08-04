@@ -10,7 +10,7 @@
     },
     {
       "method": "*",
-      "pattern": "^/exec/(\\w{1,64})/(start|json|resize)$"
+      "pattern": "^/exec/([a-z0-9]{1,64})/(start|json|resize)$"
     }
   ]
 }

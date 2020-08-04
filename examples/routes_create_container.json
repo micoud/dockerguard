@@ -12,7 +12,7 @@
     },
     {
       "method": "GET",
-      "pattern": "^/containers/(\\w{1,64})/json$"
+      "pattern": "^/containers/([a-z0-9]{1,64})/json$"
     },
     {
       "method": "POST",
@@ -36,7 +36,7 @@
     },
     {
       "method": "POST",
-      "pattern": "^/containers/(\\w{1,64})/(attach|wait|start|resize)$"
+      "pattern": "^/containers/([a-z0-9]{1,64})/(attach|wait|start|resize)$"
     },
     {
       "method": "*",
@@ -44,7 +44,7 @@
     },
     {
       "method": "*",
-      "pattern": "^/exec/(\\w{1,64})/(start|json|resize)$"
+      "pattern": "^/exec/([a-z0-9]{1,64})/(start|json|resize)$"
     }
   ]
 }

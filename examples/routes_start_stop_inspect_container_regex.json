@@ -10,7 +10,7 @@
     },
     {
       "method": "GET",
-      "pattern": "^/containers/(\\w{1,64})/(top|logs)$"
+      "pattern": "^/containers/([a-z0-9]{1,64})/(top|logs)$"
     }
   ]
 }
